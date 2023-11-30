@@ -10,8 +10,16 @@ type JsonError struct {
 
 func NewBadRequestError(msg string) *JsonError {
 	return &JsonError{
-		Message: "invalid JSON body",
+		Message: msg,
 		Status:  http.StatusBadRequest,
+		Error:   true,
+	}
+}
+
+func NewNotFoundError(msg string) *JsonError {
+	return &JsonError{
+		Message: msg,
+		Status:  http.StatusNotFound,
 		Error:   true,
 	}
 }

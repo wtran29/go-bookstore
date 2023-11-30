@@ -7,5 +7,22 @@ import (
 )
 
 func CreateUser(user users.User) (*users.User, *errors.JsonError) {
+	if err := user.Validate(); err != nil {
+		return nil, err
+	}
+	if err := user.SaveUser(); err != nil {
+		return nil, err
+	}
 	return &user, nil
+}
+
+func GetUser(userId int64) (*users.User, *errors.JsonError) {
+	// if userId <= 0 {
+	// 	return nil, errors.NewBadRequestError("invalid user id")
+	// }
+	result := &users.User{ID: userId}
+	if err := result.GetUser(); err != nil {
+		return nil, err
+	}
+	return result, nil
 }

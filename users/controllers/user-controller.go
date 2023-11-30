@@ -3,6 +3,7 @@ package controllers
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/wtran29/go-bookstore/users/domain/users"
@@ -34,12 +35,23 @@ func CreateUser(ctx *gin.Context) {
 		ctx.JSON(err.Status, err)
 		return
 	}
-	fmt.Println(user)
 	ctx.JSON(http.StatusCreated, result)
 
 }
 func GetUser(ctx *gin.Context) {
-	ctx.String(http.StatusNotImplemented, "to be implemented")
+	userId, err := strconv.ParseInt(ctx.Param("user_id"), 10, 64)
+	if err != nil {
+		err := errors.NewBadRequestError("user id should be a number")
+		ctx.JSON(err.Status, err)
+		return
+	}
+	user, getErr := services.GetUser(userId)
+	if getErr != nil {
+		ctx.JSON(getErr.Status, getErr)
+		return
+	}
+	ctx.JSON(http.StatusOK, user)
+
 }
 
 func SearchUser(ctx *gin.Context) {
