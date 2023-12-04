@@ -57,7 +57,9 @@ CREATE TABLE public.users (
     last_name character varying(255) NOT NULL,
     email character varying(255) NOT NULL,
     created_at timestamp without time zone DEFAULT now() NOT NULL,
-    updated_at timestamp without time zone DEFAULT now() NOT NULL
+    updated_at timestamp without time zone DEFAULT now() NOT NULL,
+    status character varying(255) NOT NULL,
+    password character varying(255) NOT NULL
 );
 
 
