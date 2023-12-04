@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -11,9 +10,18 @@ import (
 	"github.com/wtran29/go-bookstore/users/utils/errors"
 )
 
+func getUserId(id string) (int64, *errors.JsonError) {
+	userId, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		return 0, errors.NewBadRequestError("user id should be a number")
+
+	}
+	return userId, nil
+}
+
 func CreateUser(ctx *gin.Context) {
 	var user users.User
-	fmt.Println(user)
+
 	// bytes, err := io.ReadAll(ctx.Request.Body)
 	// if err != nil {
 	// 	// TODO: Handle error
@@ -39,9 +47,8 @@ func CreateUser(ctx *gin.Context) {
 
 }
 func GetUser(ctx *gin.Context) {
-	userId, err := strconv.ParseInt(ctx.Param("user_id"), 10, 64)
+	userId, err := getUserId(ctx.Param("user_id"))
 	if err != nil {
-		err := errors.NewBadRequestError("user id should be a number")
 		ctx.JSON(err.Status, err)
 		return
 	}
@@ -52,6 +59,43 @@ func GetUser(ctx *gin.Context) {
 	}
 	ctx.JSON(http.StatusOK, user)
 
+}
+
+func UpdateUser(ctx *gin.Context) {
+	userId, err := getUserId(ctx.Param("user_id"))
+	if err != nil {
+		ctx.JSON(err.Status, err)
+		return
+	}
+	var user users.User
+	if err := ctx.ShouldBindJSON(&user); err != nil {
+		jsonErr := errors.NewBadRequestError("invalid json body")
+		ctx.JSON(jsonErr.Status, jsonErr)
+		return
+	}
+	user.ID = userId
+
+	isPartial := ctx.Request.Method == http.MethodPatch
+
+	updatedUser, updateErr := services.UpdateUser(isPartial, user)
+	if updateErr != nil {
+		ctx.JSON(updateErr.Status, err)
+		return
+	}
+	ctx.JSON(http.StatusOK, updatedUser)
+}
+
+func DeleteUser(ctx *gin.Context) {
+	userId, err := getUserId(ctx.Param("user_id"))
+	if err != nil {
+		ctx.JSON(err.Status, err)
+		return
+	}
+	if err := services.DeleteUser(userId); err != nil {
+		ctx.JSON(err.Status, err)
+		return
+	}
+	ctx.JSON(http.StatusOK, map[string]string{"status": "deleted"})
 }
 
 func SearchUser(ctx *gin.Context) {
