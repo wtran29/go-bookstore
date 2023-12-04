@@ -23,3 +23,11 @@ func NewNotFoundError(msg string) *JsonError {
 		Error:   true,
 	}
 }
+
+func NewInternalServerError(msg string) *JsonError {
+	return &JsonError{
+		Message: msg,
+		Status:  http.StatusInternalServerError,
+		Error:   true,
+	}
+}
