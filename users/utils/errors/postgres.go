@@ -1,6 +1,7 @@
 package errors
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/jackc/pgx/v5/pgconn"
@@ -17,11 +18,11 @@ func ParseError(err error) *JsonError {
 		case "23505": // violates unique constraint
 			return NewBadRequestError("invalid data")
 		}
-		return NewInternalServerError("error processing request")
+		return NewInternalServerError(fmt.Sprintf("error processing request %v", err))
 	}
 	if strings.Contains(err.Error(), noRowsError) {
 		return NewNotFoundError("no records matching given id")
 	}
-	return NewInternalServerError("error parsing database response")
+	return NewInternalServerError(fmt.Sprintf("error parsing database response %v", err))
 
 }

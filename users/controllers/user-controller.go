@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -38,12 +39,12 @@ func CreateUser(ctx *gin.Context) {
 		return
 	}
 
-	result, err := services.CreateUser(user)
+	result, err := services.UsersService.CreateUser(user)
 	if err != nil {
 		ctx.JSON(err.Status, err)
 		return
 	}
-	ctx.JSON(http.StatusCreated, result)
+	ctx.JSON(http.StatusCreated, result.ReadJson(ctx.GetHeader("X-Public") == "true"))
 
 }
 func GetUser(ctx *gin.Context) {
@@ -52,12 +53,12 @@ func GetUser(ctx *gin.Context) {
 		ctx.JSON(err.Status, err)
 		return
 	}
-	user, getErr := services.GetUser(userId)
+	user, getErr := services.UsersService.GetUser(userId)
 	if getErr != nil {
 		ctx.JSON(getErr.Status, getErr)
 		return
 	}
-	ctx.JSON(http.StatusOK, user)
+	ctx.JSON(http.StatusOK, user.ReadJson(ctx.GetHeader("X-Public") == "true"))
 
 }
 
@@ -77,12 +78,12 @@ func UpdateUser(ctx *gin.Context) {
 
 	isPartial := ctx.Request.Method == http.MethodPatch
 
-	updatedUser, updateErr := services.UpdateUser(isPartial, user)
+	updatedUser, updateErr := services.UsersService.UpdateUser(isPartial, user)
 	if updateErr != nil {
 		ctx.JSON(updateErr.Status, err)
 		return
 	}
-	ctx.JSON(http.StatusOK, updatedUser)
+	ctx.JSON(http.StatusOK, updatedUser.ReadJson(ctx.GetHeader("X-Public") == "true"))
 }
 
 func DeleteUser(ctx *gin.Context) {
@@ -91,16 +92,23 @@ func DeleteUser(ctx *gin.Context) {
 		ctx.JSON(err.Status, err)
 		return
 	}
-	if err := services.DeleteUser(userId); err != nil {
+	if err := services.UsersService.DeleteUser(userId); err != nil {
 		ctx.JSON(err.Status, err)
 		return
 	}
-	ctx.JSON(http.StatusOK, map[string]string{"status": "deleted"})
+	ctx.JSON(http.StatusOK, map[string]string{"message": fmt.Sprintf("user %d deleted", userId), "status": "204", "errors": "false"})
 }
 
 func SearchUser(ctx *gin.Context) {
-	ctx.String(http.StatusNotImplemented, "to be implemented")
+	status := ctx.Query("status")
 
+	users, err := services.UsersService.SearchUser(status)
+	if err != nil {
+		ctx.JSON(err.Status, err)
+		return
+	}
+	result := users.ReadJson(ctx.GetHeader("X-Public") == "true")
+	ctx.JSON(http.StatusOK, result)
 }
 
 func Ping(ctx *gin.Context) {
