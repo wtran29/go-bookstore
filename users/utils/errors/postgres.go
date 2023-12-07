@@ -17,7 +17,10 @@ func ParseError(err error) *JsonError {
 		switch pgErr.Code {
 		case "23505": // violates unique constraint
 			return NewBadRequestError("invalid data")
+		case "42601": //syntax error at or near query
+			return NewInternalServerError("error occurred in the database")
 		}
+
 		return NewInternalServerError(fmt.Sprintf("error processing request %v", err))
 	}
 	if strings.Contains(err.Error(), noRowsError) {

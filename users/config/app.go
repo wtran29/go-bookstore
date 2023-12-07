@@ -15,6 +15,6 @@ var (
 func StartApplication() {
 
 	routes()
-	logger.Log.Info("starting the application")
+	logger.Info("starting the application")
 	router.Run(":8080")
 }
