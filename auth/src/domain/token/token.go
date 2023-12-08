@@ -2,7 +2,10 @@ package token
 
 import (
 	"fmt"
+	"strings"
 	"time"
+
+	"github.com/wtran29/go-bookstore/auth/src/utils/errors"
 )
 
 const (
@@ -14,6 +17,23 @@ type Token struct {
 	UserID      int64  `json:"user_id"`
 	ClientID    int64  `json:"client_id"`
 	Expiry      int64  `json:"expiry"`
+}
+
+func (t *Token) Validate() *errors.JsonError {
+	t.AccessToken = strings.TrimSpace(t.AccessToken)
+	if t.AccessToken == "" {
+		return errors.NewBadRequestError("invalid access token id")
+	}
+	if t.UserID <= 0 {
+		return errors.NewBadRequestError("invalid user id")
+	}
+	if t.ClientID <= 0 {
+		return errors.NewBadRequestError("invalid client id")
+	}
+	if t.Expiry <= 0 {
+		return errors.NewBadRequestError("invalid token expiry")
+	}
+	return nil
 }
 
 func GetNewAccessToken() Token {
