@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	noRowsError = "no rows in result set"
+	NoRowsError = "no rows in result set"
 )
 
 func ParseError(err error) *JsonError {
@@ -23,7 +23,7 @@ func ParseError(err error) *JsonError {
 
 		return NewInternalServerError(fmt.Sprintf("error processing request %v", err))
 	}
-	if strings.Contains(err.Error(), noRowsError) {
+	if strings.Contains(err.Error(), NoRowsError) {
 		return NewNotFoundError("no records matching given id")
 	}
 	return NewInternalServerError(fmt.Sprintf("error parsing database response %v", err))

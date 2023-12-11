@@ -111,6 +111,25 @@ func SearchUser(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, result)
 }
 
+func Login(ctx *gin.Context) {
+	var login users.Login
+	// fmt.Println(login)
+	if err := ctx.ShouldBindJSON(&login); err != nil {
+		jsonErr := errors.NewBadRequestError("invalid json body")
+		ctx.JSON(jsonErr.Status, jsonErr)
+		return
+	}
+
+	user, err := services.UsersService.LoginUser(login)
+	if err != nil {
+		ctx.JSON(err.Status, err)
+		return
+	}
+	user.Password = ""
+	ctx.JSON(http.StatusOK, user.ReadJson(ctx.GetHeader("X-Public") == "true"))
+
+}
+
 func Ping(ctx *gin.Context) {
 	ctx.String(http.StatusOK, "pong")
 }

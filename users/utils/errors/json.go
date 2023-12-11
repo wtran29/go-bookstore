@@ -38,3 +38,11 @@ func NewInternalServerError(msg string) *JsonError {
 		Error:   true,
 	}
 }
+
+func NewUnauthorizedError(msg string) *JsonError {
+	return &JsonError{
+		Message: msg,
+		Status:  http.StatusUnauthorized,
+		Error:   true,
+	}
+}

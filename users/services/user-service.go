@@ -6,6 +6,7 @@ import (
 
 	"github.com/wtran29/go-bookstore/users/domain/users"
 	"github.com/wtran29/go-bookstore/users/utils/errors"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var (
@@ -20,6 +21,7 @@ type usersRepository interface {
 	UpdateUser(bool, users.User) (*users.User, *errors.JsonError)
 	DeleteUser(int64) *errors.JsonError
 	SearchUser(string) (users.Users, *errors.JsonError)
+	LoginUser(users.Login) (*users.User, *errors.JsonError)
 }
 
 func (u *usersService) CreateUser(user users.User) (*users.User, *errors.JsonError) {
@@ -97,4 +99,23 @@ func (u *usersService) SearchUser(status string) (users.Users, *errors.JsonError
 	user := &users.User{}
 	return user.FindUserByStatus(status)
 
+}
+
+func (u *usersService) LoginUser(login users.Login) (*users.User, *errors.JsonError) {
+
+	user := &users.User{
+		Email: login.Email,
+	}
+	user, err := user.FindByEmail()
+	if err != nil {
+		return nil, err
+	}
+
+	pwErr := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(login.Password))
+
+	if pwErr != nil {
+		return nil, errors.NewUnauthorizedError("Invalid credentials")
+	}
+
+	return user, nil
 }

@@ -2,6 +2,7 @@ package users
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/wtran29/go-bookstore/users/data/postgres"
@@ -11,11 +12,12 @@ import (
 )
 
 const (
-	insertUserStmt        = "INSERT INTO users(first_name, last_name, email, created_at, updated_at, password, status) VALUES($1, $2, $3, $4, $5, $6, $7) RETURNING id;"
-	queryGetUser          = "SELECT id, first_name, last_name, email, created_at, updated_at, status FROM users WHERE id= $1;"
-	insertUpdateUser      = "UPDATE users SET first_name=$1, last_name=$2, email=$3 WHERE id=$4;"
-	insertDeleteUser      = "DELETE FROM users WHERE id=$1;"
-	queryFindUserByStatus = "SELECT id, first_name, last_name, email, created_at, updated_at, status FROM users WHERE status=$1;"
+	insertUserStmt    = "INSERT INTO users(first_name, last_name, email, created_at, updated_at, password, status) VALUES($1, $2, $3, $4, $5, $6, $7) RETURNING id;"
+	queryGetUser      = "SELECT id, first_name, last_name, email, created_at, updated_at, status FROM users WHERE id= $1;"
+	insertUpdateUser  = "UPDATE users SET first_name=$1, last_name=$2, email=$3 WHERE id=$4;"
+	insertDeleteUser  = "DELETE FROM users WHERE id=$1;"
+	queryFindByStatus = "SELECT id, first_name, last_name, email, created_at, updated_at, status FROM users WHERE status=$1;"
+	queryFindByEmail  = "SELECT id, first_name, last_name, email, created_at, updated_at, status, password FROM users WHERE email=$1;"
 )
 
 func (user *User) GetUser() *errors.JsonError {
@@ -53,7 +55,7 @@ func (user *User) SaveUser() *errors.JsonError {
 	}
 	defer stmt.Close()
 
-	hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		logger.Error("error generating hash for password", err)
 		return errors.NewInternalServerError(err.Error())
@@ -61,7 +63,7 @@ func (user *User) SaveUser() *errors.JsonError {
 
 	var userId int64
 
-	err = stmt.QueryRow(user.FirstName, user.LastName, user.Email, time.Now(), time.Now(), hash, user.Status).Scan(&userId)
+	err = stmt.QueryRow(user.FirstName, user.LastName, user.Email, time.Now(), time.Now(), hashedPassword, user.Status).Scan(&userId)
 	if err != nil {
 		logger.Error("error getting user id from save user", err)
 		return errors.ParseError(err)
@@ -69,8 +71,6 @@ func (user *User) SaveUser() *errors.JsonError {
 
 	user.ID = userId
 
-	// user.CreatedAt = date.GetNow()
-	// usersDB[user.ID] = user
 	return nil
 }
 
@@ -106,7 +106,7 @@ func (user *User) DeleteUser() *errors.JsonError {
 }
 
 func (user *User) FindUserByStatus(status string) ([]User, *errors.JsonError) {
-	query, err := postgres.ClientDB.Prepare(queryFindUserByStatus)
+	query, err := postgres.ClientDB.Prepare(queryFindByStatus)
 	if err != nil {
 		logger.Error("error preparing find user by status query", err)
 		return nil, errors.ParseError(err)
@@ -133,4 +133,36 @@ func (user *User) FindUserByStatus(status string) ([]User, *errors.JsonError) {
 		return nil, errors.NewNotFoundError(fmt.Sprintf("no users matching status %s", status))
 	}
 	return users, nil
+}
+
+func (user *User) FindByEmail() (*User, *errors.JsonError) {
+	query, err := postgres.ClientDB.Prepare(queryFindByEmail)
+	if err != nil {
+		logger.Error("error preparing find user by email query", err)
+		return nil, errors.ParseError(err)
+	}
+	defer query.Close()
+
+	row := query.QueryRow(user.Email)
+
+	if err := row.Scan(
+		&user.ID,
+		&user.FirstName,
+		&user.LastName,
+		&user.Email,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+		&user.Status,
+		&user.Password,
+	); err != nil {
+		if strings.Contains(err.Error(), errors.NoRowsError) {
+			return nil, errors.NewNotFoundError("user not found")
+		}
+		logger.Error("error retrieving user by email", err)
+		return nil, errors.ParseError(err)
+	}
+
+	fmt.Printf("User from dao.go:%v\n", user)
+
+	return user, nil
 }
