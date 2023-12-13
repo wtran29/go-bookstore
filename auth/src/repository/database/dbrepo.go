@@ -1,11 +1,12 @@
 package database
 
 import (
+	"errors"
+
 	"github.com/gocql/gocql"
 	"github.com/wtran29/go-bookstore/auth/src/clients/cassandra"
 	"github.com/wtran29/go-bookstore/auth/src/domain/token"
-
-	"github.com/wtran29/go-bookstore/auth/src/utils/errors"
+	"github.com/wtran29/go-bookstore/resterr"
 )
 
 const (
@@ -15,9 +16,9 @@ const (
 )
 
 type DBRepository interface {
-	GetTokenByID(string) (*token.Token, *errors.JsonError)
-	CreateToken(token.Token) *errors.JsonError
-	UpdateTokenExpiry(token.Token) *errors.JsonError
+	GetTokenByID(string) (*token.Token, *resterr.JsonError)
+	CreateToken(token.Token) *resterr.JsonError
+	UpdateTokenExpiry(token.Token) *resterr.JsonError
 }
 
 type dbRepository struct {
@@ -27,7 +28,7 @@ func NewRepo() DBRepository {
 	return &dbRepository{}
 }
 
-func (r *dbRepository) GetTokenByID(id string) (*token.Token, *errors.JsonError) {
+func (r *dbRepository) GetTokenByID(id string) (*token.Token, *resterr.JsonError) {
 
 	var result token.Token
 	if err := cassandra.GetSession().Query(queryGetToken, id).Scan(
@@ -38,16 +39,16 @@ func (r *dbRepository) GetTokenByID(id string) (*token.Token, *errors.JsonError)
 	); err != nil {
 
 		if err == gocql.ErrNotFound {
-			return nil, errors.NewNotFoundError("no access token found with given id")
+			return nil, resterr.NewNotFoundError("database error", errors.New("no access token found with given id"))
 		}
 
-		return nil, errors.NewInternalServerError(err.Error())
+		return nil, resterr.NewInternalServerError("database error", errors.New(err.Error()))
 	}
 
 	return &result, nil
 }
 
-func (r *dbRepository) CreateToken(t token.Token) *errors.JsonError {
+func (r *dbRepository) CreateToken(t token.Token) *resterr.JsonError {
 
 	if err := cassandra.GetSession().Query(queryCreateToken,
 		t.AccessToken,
@@ -55,18 +56,18 @@ func (r *dbRepository) CreateToken(t token.Token) *errors.JsonError {
 		t.ClientID,
 		t.Expiry,
 	).Exec(); err != nil {
-		return errors.NewInternalServerError(err.Error())
+		return resterr.NewInternalServerError("database error", errors.New(err.Error()))
 	}
 	return nil
 }
 
-func (r *dbRepository) UpdateTokenExpiry(t token.Token) *errors.JsonError {
+func (r *dbRepository) UpdateTokenExpiry(t token.Token) *resterr.JsonError {
 
 	if err := cassandra.GetSession().Query(queryUpdateTokenExpiry,
 		t.Expiry,
 		t.AccessToken,
 	).Exec(); err != nil {
-		return errors.NewInternalServerError(err.Error())
+		return resterr.NewInternalServerError("database error", errors.New(err.Error()))
 	}
 	return nil
 }

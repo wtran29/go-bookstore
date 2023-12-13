@@ -1,11 +1,12 @@
 package token
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
 
-	"github.com/wtran29/go-bookstore/auth/src/utils/errors"
+	"github.com/wtran29/go-bookstore/resterr"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -22,19 +23,19 @@ type Token struct {
 	Expiry      int64  `json:"expiry"`
 }
 
-func (t *Token) Validate() *errors.JsonError {
+func (t *Token) Validate() *resterr.JsonError {
 	t.AccessToken = strings.TrimSpace(t.AccessToken)
 	if t.AccessToken == "" {
-		return errors.NewBadRequestError("invalid access token id")
+		return resterr.NewBadRequestError("validation error", errors.New("invalid access token id"))
 	}
 	if t.UserID <= 0 {
-		return errors.NewBadRequestError("invalid user id")
+		return resterr.NewBadRequestError("validation error", errors.New("invalid user id"))
 	}
 	if t.ClientID <= 0 {
-		return errors.NewBadRequestError("invalid client id")
+		return resterr.NewBadRequestError("validation error", errors.New("invalid client id"))
 	}
 	if t.Expiry <= 0 {
-		return errors.NewBadRequestError("invalid token expiry")
+		return resterr.NewBadRequestError("validation error", errors.New("invalid token expiry"))
 	}
 	return nil
 }
@@ -52,14 +53,14 @@ type TokenRequest struct {
 	ClientSecret string `json:"client_secret"`
 }
 
-func (t *TokenRequest) Validate() *errors.JsonError {
+func (t *TokenRequest) Validate() *resterr.JsonError {
 	switch t.GrantType {
 	case grantTypePassword:
 		break
 	case grantTypeClientCredentials:
 		break
 	default:
-		return errors.NewBadRequestError("invalid grant type parameter")
+		return resterr.NewBadRequestError("validation error", errors.New("invalid grant type parameter"))
 	}
 
 	// TODO: Validate parameters for each grant_type
@@ -81,11 +82,11 @@ func (t Token) IsExpired() bool {
 	return expiryTime.Before(now)
 }
 
-func (t *Token) GenerateToken() *errors.JsonError {
+func (t *Token) GenerateToken() *resterr.JsonError {
 	token := fmt.Sprintf("at-%d-%d-ran", t.UserID, t.Expiry)
 	hashedToken, err := bcrypt.GenerateFromPassword([]byte(token), bcrypt.DefaultCost)
 	if err != nil {
-		return errors.NewInternalServerError(fmt.Sprintf("error generating bcrypt hash for access token: %v", err.Error()))
+		return resterr.NewInternalServerError("token error", fmt.Errorf("error generating bcrypt hash for access token: %v", err.Error()))
 	}
 	t.AccessToken = string(hashedToken)
 

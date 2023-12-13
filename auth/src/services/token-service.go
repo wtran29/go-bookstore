@@ -1,12 +1,13 @@
 package services
 
 import (
+	"errors"
 	"strings"
 
 	"github.com/wtran29/go-bookstore/auth/src/domain/token"
 	"github.com/wtran29/go-bookstore/auth/src/repository/database"
 	"github.com/wtran29/go-bookstore/auth/src/repository/rest"
-	"github.com/wtran29/go-bookstore/auth/src/utils/errors"
+	"github.com/wtran29/go-bookstore/resterr"
 )
 
 // type Repository interface {
@@ -16,9 +17,9 @@ import (
 // }
 
 type TokenService interface {
-	GetTokenByID(string) (*token.Token, *errors.JsonError)
-	CreateToken(token.TokenRequest) (*token.Token, *errors.JsonError)
-	UpdateTokenExpiry(token.Token) *errors.JsonError
+	GetTokenByID(string) (*token.Token, *resterr.JsonError)
+	CreateToken(token.TokenRequest) (*token.Token, *resterr.JsonError)
+	UpdateTokenExpiry(token.Token) *resterr.JsonError
 }
 
 type tokenService struct {
@@ -34,10 +35,10 @@ func NewService(usersRepo rest.UsersRepository, dbRepo database.DBRepository) To
 }
 
 // GetTokenByID implements Service.
-func (s *tokenService) GetTokenByID(tokenID string) (*token.Token, *errors.JsonError) {
+func (s *tokenService) GetTokenByID(tokenID string) (*token.Token, *resterr.JsonError) {
 	tokenID = strings.TrimSpace(tokenID)
 	if len(tokenID) == 0 {
-		return nil, errors.NewBadRequestError("invalid access token id")
+		return nil, resterr.NewBadRequestError("token error", errors.New("invalid access token id"))
 	}
 	token, err := s.dbRepo.GetTokenByID(tokenID)
 	if err != nil {
@@ -46,7 +47,7 @@ func (s *tokenService) GetTokenByID(tokenID string) (*token.Token, *errors.JsonE
 	return token, nil
 }
 
-func (s *tokenService) CreateToken(t token.TokenRequest) (*token.Token, *errors.JsonError) {
+func (s *tokenService) CreateToken(t token.TokenRequest) (*token.Token, *resterr.JsonError) {
 	if err := t.Validate(); err != nil {
 		return nil, err
 	}
@@ -67,7 +68,7 @@ func (s *tokenService) CreateToken(t token.TokenRequest) (*token.Token, *errors.
 	return &at, nil
 }
 
-func (s *tokenService) UpdateTokenExpiry(t token.Token) *errors.JsonError {
+func (s *tokenService) UpdateTokenExpiry(t token.Token) *resterr.JsonError {
 	if err := t.Validate(); err != nil {
 		return err
 	}

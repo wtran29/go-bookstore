@@ -2,10 +2,8 @@
 package services
 
 import (
-	"fmt"
-
+	"github.com/wtran29/go-bookstore/resterr"
 	"github.com/wtran29/go-bookstore/users/domain/users"
-	"github.com/wtran29/go-bookstore/users/utils/errors"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -16,16 +14,16 @@ var (
 type usersService struct{}
 
 type usersRepository interface {
-	CreateUser(users.User) (*users.User, *errors.JsonError)
-	GetUser(int64) (*users.User, *errors.JsonError)
-	UpdateUser(bool, users.User) (*users.User, *errors.JsonError)
-	DeleteUser(int64) *errors.JsonError
-	SearchUser(string) (users.Users, *errors.JsonError)
-	LoginUser(users.Login) (*users.User, *errors.JsonError)
+	CreateUser(users.User) (*users.User, *resterr.JsonError)
+	GetUser(int64) (*users.User, *resterr.JsonError)
+	UpdateUser(bool, users.User) (*users.User, *resterr.JsonError)
+	DeleteUser(int64) *resterr.JsonError
+	SearchUser(string) (users.Users, *resterr.JsonError)
+	LoginUser(users.Login) (*users.User, *resterr.JsonError)
 }
 
-func (u *usersService) CreateUser(user users.User) (*users.User, *errors.JsonError) {
-	fmt.Println(user)
+func (u *usersService) CreateUser(user users.User) (*users.User, *resterr.JsonError) {
+
 	// if valid, err := crypto.PasswordMatches(user.Password, user); err != nil || !valid {
 	// 	return nil, errors.ParseError(err)
 	// }
@@ -42,7 +40,7 @@ func (u *usersService) CreateUser(user users.User) (*users.User, *errors.JsonErr
 	return &user, nil
 }
 
-func (u *usersService) GetUser(userId int64) (*users.User, *errors.JsonError) {
+func (u *usersService) GetUser(userId int64) (*users.User, *resterr.JsonError) {
 	// if userId <= 0 {
 	// 	return nil, errors.NewBadRequestError("invalid user id")
 	// }
@@ -53,7 +51,7 @@ func (u *usersService) GetUser(userId int64) (*users.User, *errors.JsonError) {
 	return result, nil
 }
 
-func (u *usersService) UpdateUser(isPartial bool, user users.User) (*users.User, *errors.JsonError) {
+func (u *usersService) UpdateUser(isPartial bool, user users.User) (*users.User, *resterr.JsonError) {
 	current, err := u.GetUser(user.ID)
 	if err != nil {
 		return nil, err
@@ -90,18 +88,18 @@ func (u *usersService) UpdateUser(isPartial bool, user users.User) (*users.User,
 	return current, nil
 }
 
-func (u *usersService) DeleteUser(userId int64) *errors.JsonError {
+func (u *usersService) DeleteUser(userId int64) *resterr.JsonError {
 	currentUser := &users.User{ID: userId}
 	return currentUser.DeleteUser()
 }
 
-func (u *usersService) SearchUser(status string) (users.Users, *errors.JsonError) {
+func (u *usersService) SearchUser(status string) (users.Users, *resterr.JsonError) {
 	user := &users.User{}
 	return user.FindUserByStatus(status)
 
 }
 
-func (u *usersService) LoginUser(login users.Login) (*users.User, *errors.JsonError) {
+func (u *usersService) LoginUser(login users.Login) (*users.User, *resterr.JsonError) {
 
 	user := &users.User{
 		Email: login.Email,
@@ -114,7 +112,7 @@ func (u *usersService) LoginUser(login users.Login) (*users.User, *errors.JsonEr
 	pwErr := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(login.Password))
 
 	if pwErr != nil {
-		return nil, errors.NewUnauthorizedError("Invalid credentials")
+		return nil, resterr.NewUnauthorizedError("Invalid credentials", pwErr)
 	}
 
 	return user, nil

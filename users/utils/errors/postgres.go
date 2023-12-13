@@ -1,31 +1,32 @@
 package errors
 
 import (
-	"fmt"
+	"errors"
 	"strings"
 
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/wtran29/go-bookstore/resterr"
 )
 
 const (
 	NoRowsError = "no rows in result set"
 )
 
-func ParseError(err error) *JsonError {
+func ParseError(err error) *resterr.JsonError {
 	pgErr, ok := err.(*pgconn.PgError)
 	if ok {
 		switch pgErr.Code {
 		case "23505": // violates unique constraint
-			return NewBadRequestError("invalid data")
+			return resterr.NewBadRequestError("invalid data", err)
 		case "42601": //syntax error at or near query
-			return NewInternalServerError("error occurred in the database")
+			return resterr.NewInternalServerError("error occurred in the database", err)
 		}
 
-		return NewInternalServerError(fmt.Sprintf("error processing request %v", err))
+		return resterr.NewInternalServerError("error processing request", err)
 	}
 	if strings.Contains(err.Error(), NoRowsError) {
-		return NewNotFoundError("no records matching given id")
+		return resterr.NewNotFoundError("no records matching given id", err)
 	}
-	return NewInternalServerError(fmt.Sprintf("error parsing database response %v", err))
+	return resterr.NewInternalServerError("error parsing database response", errors.New("database error"))
 
 }

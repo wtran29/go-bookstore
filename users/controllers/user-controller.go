@@ -7,15 +7,15 @@ import (
 
 	"github.com/gin-gonic/gin"
 	authLib "github.com/wtran29/auth-lib/auth"
+	"github.com/wtran29/go-bookstore/resterr"
 	"github.com/wtran29/go-bookstore/users/domain/users"
 	"github.com/wtran29/go-bookstore/users/services"
-	"github.com/wtran29/go-bookstore/users/utils/errors"
 )
 
-func getUserId(id string) (int64, *errors.JsonError) {
+func getUserId(id string) (int64, *resterr.JsonError) {
 	userId, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
-		return 0, errors.NewBadRequestError("user id should be a number")
+		return 0, resterr.NewBadRequestError("user id should be a number", err)
 
 	}
 	return userId, nil
@@ -35,7 +35,7 @@ func CreateUser(ctx *gin.Context) {
 	// 	return
 	// }
 	if err := ctx.ShouldBindJSON(&user); err != nil {
-		jsonErr := errors.NewBadRequestError("invalid json body")
+		jsonErr := resterr.NewBadRequestError("invalid json body", err)
 		ctx.JSON(jsonErr.Status, jsonErr)
 		return
 	}
@@ -54,7 +54,7 @@ func GetUser(ctx *gin.Context) {
 		return
 	}
 	if callerId := authLib.GetCallerId(ctx.Request); callerId == 0 {
-		err := errors.JsonError{
+		err := resterr.JsonError{
 			Status:  http.StatusUnauthorized,
 			Message: "resource not available",
 		}
@@ -87,7 +87,7 @@ func UpdateUser(ctx *gin.Context) {
 	}
 	var user users.User
 	if err := ctx.ShouldBindJSON(&user); err != nil {
-		jsonErr := errors.NewBadRequestError("invalid json body")
+		jsonErr := resterr.NewBadRequestError("invalid json body", err)
 		ctx.JSON(jsonErr.Status, jsonErr)
 		return
 	}
@@ -132,7 +132,7 @@ func Login(ctx *gin.Context) {
 	var login users.Login
 	// fmt.Println(login)
 	if err := ctx.ShouldBindJSON(&login); err != nil {
-		jsonErr := errors.NewBadRequestError("invalid json body")
+		jsonErr := resterr.NewBadRequestError("invalid json body", err)
 		ctx.JSON(jsonErr.Status, jsonErr)
 		return
 	}

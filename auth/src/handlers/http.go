@@ -1,13 +1,14 @@
 package handlers
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/wtran29/go-bookstore/auth/src/domain/token"
 	"github.com/wtran29/go-bookstore/auth/src/services"
-	"github.com/wtran29/go-bookstore/auth/src/utils/errors"
+	"github.com/wtran29/go-bookstore/resterr"
 )
 
 type TokenHandler interface {
@@ -40,7 +41,7 @@ func (h *tokenHandler) GetTokenByID(ctx *gin.Context) {
 func (h *tokenHandler) CreateToken(ctx *gin.Context) {
 	var token token.TokenRequest
 	if err := ctx.ShouldBindJSON(&token); err != nil {
-		restErr := errors.NewBadRequestError("invalid json body")
+		restErr := resterr.NewBadRequestError("bad request", errors.New("invalid json body"))
 		ctx.JSON(restErr.Status, restErr)
 		return
 	}
