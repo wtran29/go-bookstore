@@ -2,8 +2,14 @@ module github.com/wtran29/go-bookstore/auth
 
 go 1.21.1
 
+replace (
+	github.com/mercadolibre/golang-restclient/rest => github.com/your-username/golang-restclient/rest v1.0.0
+)
+
+
 require (
 	github.com/gin-gonic/gin v1.9.1
+	github.com/gocql/gocql v1.6.0
 	github.com/stretchr/testify v1.8.3
 )
 
@@ -17,7 +23,6 @@ require (
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.14.0 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
-	github.com/gocql/gocql v1.6.0 // indirect
 	github.com/golang/snappy v0.0.3 // indirect
 	github.com/hailocab/go-hostpool v0.0.0-20160125115350-e80d13ce29ed // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
@@ -30,6 +35,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.11 // indirect
+	github.com/wtran29/golang-restclient v0.0.0-20231212051025-40890b78e038
 	golang.org/x/arch v0.3.0 // indirect
 	golang.org/x/crypto v0.9.0 // indirect
 	golang.org/x/net v0.10.0 // indirect

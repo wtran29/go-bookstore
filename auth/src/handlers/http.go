@@ -1,10 +1,12 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/wtran29/go-bookstore/auth/src/domain/token"
+	"github.com/wtran29/go-bookstore/auth/src/services"
 	"github.com/wtran29/go-bookstore/auth/src/utils/errors"
 )
 
@@ -15,12 +17,19 @@ type TokenHandler interface {
 }
 
 type tokenHandler struct {
-	service token.Service
+	service services.TokenService
+}
+
+func NewHandler(s services.TokenService) TokenHandler {
+	return &tokenHandler{
+		service: s,
+	}
 }
 
 // GetTokenByID implements TokenHandler.
 func (h *tokenHandler) GetTokenByID(ctx *gin.Context) {
 	token, err := h.service.GetTokenByID(ctx.Param("token_id"))
+	fmt.Println(token)
 	if err != nil {
 		ctx.JSON(err.Status, err)
 		return
@@ -29,25 +38,20 @@ func (h *tokenHandler) GetTokenByID(ctx *gin.Context) {
 }
 
 func (h *tokenHandler) CreateToken(ctx *gin.Context) {
-	var token token.Token
+	var token token.TokenRequest
 	if err := ctx.ShouldBindJSON(&token); err != nil {
 		restErr := errors.NewBadRequestError("invalid json body")
 		ctx.JSON(restErr.Status, restErr)
 		return
 	}
-	if err := h.service.CreateToken(token); err != nil {
+	at, err := h.service.CreateToken(token)
+	if err != nil {
 		ctx.JSON(err.Status, err)
 		return
 	}
-	ctx.JSON(http.StatusCreated, token)
+	ctx.JSON(http.StatusCreated, at)
 }
 
 func (h *tokenHandler) UpdateTokenExpiry(ctx *gin.Context) {
 	ctx.JSON(http.StatusNotImplemented, "unimplemented")
-}
-
-func NewHandler(s token.Service) TokenHandler {
-	return &tokenHandler{
-		service: s,
-	}
 }

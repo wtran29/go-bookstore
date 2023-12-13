@@ -1,0 +1,4 @@
+github.com/wtran29/go-bookstore/auth v0.0.0-20231211214128-cc82eee2c083 h1:Q+1qUtcCmDX9rZW3dW5GT3F4zgB4a/FIEtkB2EFZlQU=
+github.com/wtran29/go-bookstore/auth v0.0.0-20231211214128-cc82eee2c083/go.mod h1:WXVfdowSHgCkuxm+GAaSl53BXgi6NLQ+XcTzYZOd6sk=
+github.com/wtran29/golang-restclient v0.0.0-20231212051025-40890b78e038 h1:FErZXsjw+Mqbt5pE/fYHnj5IjdSv4Dbfi44acVDxjGQ=
+github.com/wtran29/golang-restclient v0.0.0-20231212051025-40890b78e038/go.mod h1:cMAyxWNwLVEj07M2JDWB7K7ZIUi4eNpzqswcLFnvhds=

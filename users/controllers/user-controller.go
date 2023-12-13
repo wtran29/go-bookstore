@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	authLib "github.com/wtran29/auth-lib/auth"
 	"github.com/wtran29/go-bookstore/users/domain/users"
 	"github.com/wtran29/go-bookstore/users/services"
 	"github.com/wtran29/go-bookstore/users/utils/errors"
@@ -48,6 +49,18 @@ func CreateUser(ctx *gin.Context) {
 
 }
 func GetUser(ctx *gin.Context) {
+	if err := authLib.AuthenticateRequest(ctx.Request); err != nil {
+		ctx.JSON(err.Status, err)
+		return
+	}
+	if callerId := authLib.GetCallerId(ctx.Request); callerId == 0 {
+		err := errors.JsonError{
+			Status:  http.StatusUnauthorized,
+			Message: "resource not available",
+		}
+		ctx.JSON(err.Status, err)
+		return
+	}
 	userId, err := getUserId(ctx.Param("user_id"))
 	if err != nil {
 		ctx.JSON(err.Status, err)
@@ -58,7 +71,11 @@ func GetUser(ctx *gin.Context) {
 		ctx.JSON(getErr.Status, getErr)
 		return
 	}
-	ctx.JSON(http.StatusOK, user.ReadJson(ctx.GetHeader("X-Public") == "true"))
+	if authLib.GetCallerId(ctx.Request) == user.ID {
+		ctx.JSON(http.StatusOK, user.ReadJson(false))
+		return
+	}
+	ctx.JSON(http.StatusOK, user.ReadJson(authLib.IsPublic(ctx.Request)))
 
 }
 
