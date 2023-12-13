@@ -4,4 +4,5 @@ use (
     ./users
     ./auth
     ./auth-lib
+    ./resterr
 )
